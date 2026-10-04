@@ -1,25 +1,27 @@
 # Home Assistant To-do Sync
 
-A custom Home Assistant integration that keeps three `todo` entities synchronised.
+A custom Home Assistant integration that performs a two-way merge between pairs of `todo` entities.
 
-It is designed for setups where Home Assistant is the bridge between two external task systems. The middle/master list remains a normal editable Home Assistant to-do list, while a small persisted snapshot records the last agreed state so changes can be reconciled in either direction.
+Each config entry synchronises one pair. Add the integration repeatedly to sync as many Alexa, CalDAV, Local To-do or other Home Assistant to-do lists as you want.
 
-## Nick's setup
+## Example
 
-- **Master:** `todo.shopping_list` (Home Assistant Shopping List)
-- **List A:** `todo.njharrison_gmail_com_shopping_list` (Alexa)
-- **List B:** `todo.shopping_2` (Radicale / Apple Reminders)
+- **List A:** Alexa Shopping
+- **List B:** Radicale / Apple Reminders Shopping
 
-## What v0.1.0 syncs
+The integration keeps a small persisted **last agreed state** internally. That lets it distinguish a real change on one endpoint from stale state on the other without requiring a third "master" list.
 
-- New items in any list
+## What v0.2.0 syncs
+
+- New items in either list
 - Completed / reopened status in either direction
 - Deletion/removal in either direction
-- Changes made directly to the master list
 - Periodic reconciliation (default 10 seconds)
+- Debounced reconciliation after entity changes
 - Persistent last-agreed state across Home Assistant restarts
+- Multiple independent list pairs
 
-Items are matched by a case-insensitive, whitespace-normalised summary. Avoid duplicate items with the same name. Rename handling is limited in v0.1 because external systems use different UIDs.
+Items are currently matched by a case-insensitive, whitespace-normalised summary. Avoid duplicate items with the same name. Rename handling is limited because external systems use different UIDs.
 
 ## Installation
 
@@ -29,16 +31,13 @@ Items are matched by a case-insensitive, whitespace-normalised summary. Avoid du
 2. Install **To-do Sync**.
 3. Restart Home Assistant.
 4. Go to **Settings → Devices & services → Add integration → To-do Sync**.
-5. Choose the three to-do entities.
-
-### Manual
-
-Copy `custom_components/todo_sync` into your Home Assistant `config/custom_components` directory and restart Home Assistant.
-
-## Conflict handling
-
-The integration stores the last agreed state. If one list changes, that change is propagated to the other two. If two lists independently make conflicting changes before a reconciliation, the master list wins when it is one of the changed lists; otherwise List A wins.
+5. Choose List A and List B.
+6. Repeat step 4 for every additional pair.
 
 ## Safety
 
-The first reconciliation is deliberately additive: existing items from all three lists are merged rather than treating absence as deletion.
+The first reconciliation is deliberately additive: existing items from both lists are merged rather than treating absence as deletion.
+
+## Conflict handling
+
+Normally only one endpoint differs from the last agreed state, so that endpoint wins and its change is copied to the other. If both endpoints independently change the same item in incompatible ways before reconciliation, List A wins and a warning is logged.
