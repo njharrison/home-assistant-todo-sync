@@ -40,6 +40,7 @@ class TodoSync:
         self.baseline: dict[str, dict[str, Any]] = {}
         self.lock = asyncio.Lock()
         self.unsubs: list = []
+        self._debounce_task: asyncio.Task | None = None
 
     async def async_start(self) -> None:
         saved = await self.store.async_load()
@@ -47,7 +48,14 @@ class TodoSync:
 
         @callback
         def changed(_event) -> None:
-            self.hass.async_create_task(self.async_reconcile())
+            # CalDAV and other external todo providers may update the entity state
+            # before their item payload is readable. Debounce so we reconcile the
+            # settled list rather than immediately reading stale item data.
+            if self._debounce_task and not self._debounce_task.done():
+                self._debounce_task.cancel()
+            self._debounce_task = self.hass.async_create_task(
+                self._async_debounced_reconcile()
+            )
 
         self.unsubs.append(async_track_state_change_event(self.hass, self.entities, changed))
         self.unsubs.append(
@@ -59,10 +67,19 @@ class TodoSync:
         )
         await self.async_reconcile()
 
+    async def _async_debounced_reconcile(self) -> None:
+        try:
+            await asyncio.sleep(2)
+            await self.async_reconcile()
+        except asyncio.CancelledError:
+            pass
+
     async def async_stop(self) -> None:
         for unsub in self.unsubs:
             unsub()
         self.unsubs.clear()
+        if self._debounce_task and not self._debounce_task.done():
+            self._debounce_task.cancel()
 
     async def _read(self, entity_id: str) -> dict[str, dict[str, Any]]:
         response = await self.hass.services.async_call(
