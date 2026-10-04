@@ -56,10 +56,13 @@ class TodoSync:
             )
 
         self.unsubs.append(async_track_state_change_event(self.hass, self.entities, changed))
+        async def interval_reconcile(_now) -> None:
+            await self.async_reconcile()
+
         self.unsubs.append(
             async_track_time_interval(
                 self.hass,
-                lambda _now: self.hass.async_create_task(self.async_reconcile()),
+                interval_reconcile,
                 timedelta(seconds=self.interval),
             )
         )
