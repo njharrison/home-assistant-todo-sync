@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
 from homeassistant.helpers.storage import Store
 
-from .const import CONF_INTERVAL, CONF_LIST_A, CONF_LIST_B, CONF_MASTER, DEFAULT_INTERVAL, DOMAIN
+from .const import CONF_INTERVAL, CONF_LIST_A, CONF_LIST_B, DEFAULT_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 STORE_VERSION = 1
@@ -30,11 +30,9 @@ class TodoSync:
         self.hass = hass
         self.entry = entry
         self.entities = [
-            entry.data[CONF_MASTER],
             entry.data[CONF_LIST_A],
             entry.data[CONF_LIST_B],
         ]
-        self.master = self.entities[0]
         self.interval = int(entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL))
         self.store: Store = Store(hass, STORE_VERSION, f"{DOMAIN}.{entry.entry_id}")
         self.baseline: dict[str, dict[str, Any]] = {}
@@ -101,7 +99,7 @@ class TodoSync:
             key = _key(summary)
             if key in result:
                 _LOGGER.warning(
-                    "Duplicate to-do summary %r in %s; To-do Sync v0.1 uses summaries as identity",
+                    "Duplicate to-do summary %r in %s; To-do Sync uses summaries as identity",
                     summary,
                     entity_id,
                 )
@@ -171,9 +169,9 @@ class TodoSync:
         states = [_state(item) for item in current]
 
         if not self.baseline:
-            # First run: merge everything. If the same summary exists in more than
-            # one place, prefer master, then A, then B.
-            return current[0] or current[1] or current[2]
+            # First run: merge everything. If the same summary exists in both
+            # places, prefer List A.
+            return current[0] or current[1]
 
         changed = [i for i, state in enumerate(states) if state != previous_state]
         if not changed:
@@ -188,8 +186,8 @@ class TodoSync:
         if len(changed_states) == 1:
             return current[changed[0]]
 
-        # Concurrent conflict: the master wins if it changed; otherwise A wins.
-        winner = 0 if 0 in changed else changed[0]
+        # Concurrent conflict: List A wins.
+        winner = 0
         _LOGGER.warning(
             "Conflicting changes for %r; choosing %s",
             (previous or current[winner] or {}).get("summary", key),
