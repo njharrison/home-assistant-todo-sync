@@ -2,15 +2,20 @@
   "config": {
     "step": {
       "user": {
-        "title": "To-do Sync test",
-        "description": "Minimal configuration-flow test.",
-        "data": {
-          "test": "Test"
-        }
+        "title": "Set up To-do Sync",
+        "description": "Choose two Home Assistant to-do lists to keep synchronised.",
+        "data": {"list_a": "List A", "list_b": "List B", "interval": "Reconciliation interval"}
+      },
+      "reconfigure": {
+        "title": "Reconfigure To-do Sync",
+        "description": "Change the two to-do lists or reconciliation interval.",
+        "data": {"list_a": "List A", "list_b": "List B", "interval": "Reconciliation interval"}
       }
     },
+    "error": {"lists_must_differ": "Choose two different to-do lists."},
     "abort": {
-      "test_complete": "The minimal config flow loaded successfully."
+      "already_configured": "This pair of lists is already configured.",
+      "reconfigure_successful": "To-do Sync was reconfigured successfully."
     }
   }
 }
