@@ -40,8 +40,8 @@ class TodoSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return vol.Schema(
             {
-                vol.Required(CONF_LIST_A, default=defaults.get(CONF_LIST_A)): todo_selector,
-                vol.Required(CONF_LIST_B, default=defaults.get(CONF_LIST_B)): todo_selector,
+                vol.Required(CONF_LIST_A): todo_selector,
+                vol.Required(CONF_LIST_B): todo_selector,
                 vol.Optional(
                     CONF_INTERVAL,
                     default=defaults.get(CONF_INTERVAL, DEFAULT_INTERVAL),
