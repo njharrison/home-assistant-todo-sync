@@ -36,7 +36,9 @@ class TodoSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         defaults = defaults or {}
         todo = selector.EntitySelector(selector.EntitySelectorConfig(domain="todo"))
         fields = {}
-        fields[vol.Required(CONF_LIST_A, default=defaults[CONF_LIST_A])] = todo if CONF_LIST_A in defaults else todo
-        fields[vol.Required(CONF_LIST_B, default=defaults[CONF_LIST_B])] = todo if CONF_LIST_B in defaults else todo
+        key_a = vol.Required(CONF_LIST_A, default=defaults[CONF_LIST_A]) if CONF_LIST_A in defaults else vol.Required(CONF_LIST_A)
+        key_b = vol.Required(CONF_LIST_B, default=defaults[CONF_LIST_B]) if CONF_LIST_B in defaults else vol.Required(CONF_LIST_B)
+        fields[key_a] = todo
+        fields[key_b] = todo
         fields[vol.Optional(CONF_INTERVAL, default=defaults.get(CONF_INTERVAL, DEFAULT_INTERVAL))] = selector.NumberSelector(selector.NumberSelectorConfig(min=5, max=300, step=5, mode=selector.NumberSelectorMode.BOX, unit_of_measurement="s"))
         return vol.Schema(fields)
