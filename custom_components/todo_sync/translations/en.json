@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up To-do Sync",
+        "description": "Choose three Home Assistant to-do lists. The master is also a normal editable list; changes made on any of the three lists are synchronised to the others.",
+        "data": {
+          "master": "Master / baseline list",
+          "list_a": "List A",
+          "list_b": "List B",
+          "interval": "Reconciliation interval"
+        }
+      }
+    },
+    "error": {
+      "lists_must_differ": "Choose three different to-do lists."
+    },
+    "abort": {
+      "already_configured": "These lists are already configured."
+    }
+  }
+}
