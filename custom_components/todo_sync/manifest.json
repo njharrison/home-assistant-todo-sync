@@ -1,0 +1,10 @@
+{
+  "domain": "todo_sync",
+  "name": "To-do Sync",
+  "codeowners": ["@njharrison"],
+  "config_flow": true,
+  "documentation": "https://github.com/njharrison/home-assistant-todo-sync",
+  "iot_class": "local_polling",
+  "integration_type": "helper",
+  "version": "0.1.0"
+}
