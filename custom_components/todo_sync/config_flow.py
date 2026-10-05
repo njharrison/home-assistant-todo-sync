@@ -2,11 +2,39 @@ from __future__ import annotations
 from typing import Any
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from .const import CONF_INTERVAL, CONF_LIST_A, CONF_LIST_B, DEFAULT_INTERVAL, DOMAIN
 
+class TodoSyncOptionsFlow(config_entries.OptionsFlow):
+    async def async_step_init(self, user_input: dict[str, Any] | None = None):
+        entry = self.config_entry
+        if user_input is not None:
+            entities = [user_input[CONF_LIST_A], user_input[CONF_LIST_B]]
+            if len(set(entities)) != 2:
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=TodoSyncConfigFlow._schema(user_input),
+                    errors={"base": "lists_must_differ"},
+                )
+            self.hass.config_entries.async_update_entry(entry, data=user_input)
+            await self.hass.config_entries.async_reload(entry.entry_id)
+            return self.async_create_entry(title="", data={})
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=TodoSyncConfigFlow._schema(dict(entry.data)),
+        )
+
+
 class TodoSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        return TodoSyncOptionsFlow()
+
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None):
         if user_input is not None:
